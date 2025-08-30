@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { ShoppingBag } from "lucide-react";
+import Image from "next/image";
 
 export default function Banner() {
   return (
@@ -41,7 +42,9 @@ export default function Banner() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="flex justify-center md:justify-end w-full md:w-1/2"
         >
-          <img
+          <Image
+          width={100}
+          height={100}
             src="https://i.ibb.co/9c1KpVg/shopping-banner.png"
             alt="Ecommerce Banner"
             className="w-full max-w-md drop-shadow-2xl"

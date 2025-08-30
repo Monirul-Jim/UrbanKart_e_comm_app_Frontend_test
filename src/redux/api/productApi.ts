@@ -1,4 +1,29 @@
 import { baseApi } from "./baseApi";
+// Define the Product interface outside your component
+export interface Product {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  image: string;
+  subCategory: {
+    _id: string;
+    name: string;
+    category: {
+      name: string;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+  isFlashSale: boolean;
+  flashSalePrice?: number;
+  flashSaleStart?: string;
+  flashSaleEnd?: string;
+  stockOut: boolean;
+  isPopular: boolean;
+}
+
 
 const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

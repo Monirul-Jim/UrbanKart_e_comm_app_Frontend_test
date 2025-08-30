@@ -1,24 +1,12 @@
 'use client';
 import { Bell, MessageSquare, Moon, Search, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useState } from "react";
 
 const DashboardHeader = () => {
   const [theme, setTheme] = useState<'light' | 'dark' | null>(null);
 
-  // Initialize theme after mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    const initialTheme = savedTheme === "dark" ? "dark" : "light";
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
 
-  useEffect(() => {
-    if (theme) {
-      localStorage.setItem("theme", theme);
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    }
-  }, [theme]);
 
   const toggleTheme = () => {
     if (!theme) return;
@@ -60,7 +48,9 @@ const DashboardHeader = () => {
             <MessageSquare className="h-6 w-6 text-gray-600 dark:text-gray-300" />
           </button>
           <div className="flex items-center space-x-2">
-            <img
+            <Image
+            width={8}
+            height={8}
               className="h-8 w-8 rounded-full object-cover border-2 border-indigo-400 dark:border-indigo-600"
               src="https://placehold.co/32x32/6366F1/FFFFFF?text=JD"
               alt="User Avatar"

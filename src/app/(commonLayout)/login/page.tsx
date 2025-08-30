@@ -7,6 +7,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useLoginUserMutation } from "@/redux/api/authApi";
 import { verifyToken } from "@/utils/verifyToken";
 import { setUser, TUser } from "@/redux/feature/auth/authSlice";
+import DemoCredentials from "@/components/DemoCredentials/DemoCredentials";
 
 // Define the form data interface
 interface FormData {
@@ -51,6 +52,8 @@ const Login = () => {
       typeof (data as ErrorData).message === "string"
     );
   }
+ 
+
 
   return (
    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200">
@@ -141,7 +144,9 @@ const Login = () => {
             Register
           </a>
         </p>
+        <DemoCredentials/>
       </div>
+      
     </div>
   );
 };

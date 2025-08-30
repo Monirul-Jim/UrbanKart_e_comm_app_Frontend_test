@@ -5,13 +5,49 @@ import {
   useGetAllOrdersQuery,
   useUpdateOrderStatusMutation,
 } from "@/redux/api/orderApi";
+import Image from "next/image";
+type OrderItem = {
+  _id: string;
+  title: string;
+  price: number;
+  image: string;
+};
+
+type Customer = {
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+};
+
+type Order = {
+  _id: string;
+  tran_id: string;
+  customer: Customer;
+  amount: number;
+  currency: string;
+  items: OrderItem[];
+  status: "SUCCESS" | "PENDING" | "FAILED";
+  orderStatus:
+    | "PENDING"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "RETURNED"
+    | "ON_ARRIVAL_PENDING"
+    | "ON_ARRIVAL_DELIVERED";
+  createdAt: string;
+};
 
 const OrdersTable: React.FC = () => {
   const { data, isLoading, isError } = useGetAllOrdersQuery(undefined);
   const [updateOrderStatus] = useUpdateOrderStatusMutation();
 
   if (isLoading) return <p className="text-center py-6">Loading orders...</p>;
-  if (isError) return <p className="text-center py-6 text-red-500">Failed to load orders</p>;
+  if (isError)
+    return (
+      <p className="text-center py-6 text-red-500">Failed to load orders</p>
+    );
 
   const orders = data?.data || [];
 
@@ -43,7 +79,7 @@ const OrdersTable: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {orders.map((order: any, index: number) => (
+            {orders.map((order: Order, index: number) => (
               <tr key={order._id}>
                 {/* index */}
                 <td className="px-6 py-4">{index + 1}</td>
@@ -55,9 +91,15 @@ const OrdersTable: React.FC = () => {
                 <td className="px-6 py-4">
                   <div>
                     <p className="font-semibold">{order.customer.name}</p>
-                    <p className="text-xs text-gray-600">{order.customer.phone}</p>
-                    <p className="text-xs text-gray-600">{order.customer.city}</p>
-                    <p className="text-xs text-gray-600">{order.customer.address}</p>
+                    <p className="text-xs text-gray-600">
+                      {order.customer.phone}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {order.customer.city}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {order.customer.address}
+                    </p>
                   </div>
                 </td>
 
@@ -69,14 +111,16 @@ const OrdersTable: React.FC = () => {
                 {/* Items */}
                 <td className="px-6 py-4">
                   <div className="space-y-2">
-                    {order.items.map((item: any) => (
+                    {order?.items?.map((item: OrderItem) => (
                       <div
                         key={item._id}
                         className="flex items-center gap-2 border-b last:border-none pb-2 last:pb-0"
                       >
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.title}
+                          width={32}
+                          height={32}
                           className="w-8 h-8 object-cover rounded"
                         />
                         <div className="text-sm">
@@ -117,8 +161,12 @@ const OrdersTable: React.FC = () => {
                     <option value="SHIPPED">SHIPPED</option>
                     <option value="DELIVERED">DELIVERED</option>
                     <option value="RETURNED">RETURNED</option>
-                    <option value="ON_ARRIVAL_PENDING">ON ARRIVAL PENDING</option>
-                    <option value="ON_ARRIVAL_DELIVERED">ON ARRIVAL DELIVERED</option>
+                    <option value="ON_ARRIVAL_PENDING">
+                      ON ARRIVAL PENDING
+                    </option>
+                    <option value="ON_ARRIVAL_DELIVERED">
+                      ON ARRIVAL DELIVERED
+                    </option>
                   </select>
                 </td>
 
@@ -128,7 +176,6 @@ const OrdersTable: React.FC = () => {
                   <br />
                   {new Date(order.createdAt).toLocaleTimeString()}
                 </td>
-
               </tr>
             ))}
           </tbody>

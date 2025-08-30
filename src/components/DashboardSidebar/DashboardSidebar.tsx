@@ -1,9 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Settings,
-  Users,
   BarChart,
   ChevronRight,
   ChevronLeft,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/feature/hook";
 import { logout } from "@/redux/feature/auth/authSlice";
+import Image from "next/image";
 
 interface NavItem {
   name: string;
@@ -34,60 +34,26 @@ const DashboardSidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [activeContent, setActiveContent] = useState<string>("Dashboard");
- const user = useAppSelector((state) => state.auth.user);
-const dispatch=useAppDispatch()
-// const navigation: NavItem[] = [
-//   {
-//     name: "Dashboard",
-//     icon: LayoutDashboard,
-//     href: "/dashboard",
-//     current: true,
-//   },
-//   {
-//     name: "User Management",
-//     icon: User,
-//     href: "/dashboard/usermanagement",
-//     current: false,
-//   },
-//   {
-//     name: "Product",
-//     icon: Boxes,
-//     href: "/dashboard/product",
-//     current: false,
-//     children: [
-//       { name: "Category", icon: Layers, href: "/dashboard/categories", current: false },
-//       { name: "Sub Category", icon: ListTree, href: "/dashboard/subcategories", current: false },
-//       { name: "Product", icon: Package, href: "/dashboard/product", current: false },
-//     ],
-//   },
-//   {
-//     name: "Orders",
-//     icon: ShoppingCart,
-//     href: "/dashboard/orders",
-//     current: false,
-//     children: [
-//       { name: "All Orders", icon: Package, href: "/dashboard/ordertable", current: false },
-//       { name: "Pending", icon: Clock, href: "/dashboard/orders/pending", current: false },
-//       { name: "Completed", icon: CheckCircle, href: "/dashboard/orders/completed", current: false },
-//     ],
-//   },
-//   { name: "Users", icon: Users, href: "/dashboard/users", current: false },
-//   { name: "Analytics", icon: BarChart, href: "/dashboard/analytics", current: false },
-//   { name: "Settings", icon: Settings, href: "/dashboard/settings", current: false },
-// ];
- // Full menu (for admin)
-  const adminNavigation: NavItem[] = [
+ const [mounted, setMounted] = useState(false);
+  const user = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Prevent hydration mismatch
+    return null; 
+  }
+
+  // Base admin navigation (shared by admin + super_admin)
+  const baseAdminNavigation: NavItem[] = [
     {
       name: "Dashboard",
       icon: LayoutDashboard,
       href: "/dashboard",
       current: true,
-    },
-    {
-      name: "User Management",
-      icon: User,
-      href: "/dashboard/usermanagement",
-      current: false,
     },
     {
       name: "Product",
@@ -125,14 +91,24 @@ const dispatch=useAppDispatch()
     },
   ];
 
-  // Decide which navigation to use
-// Decide which navigation to use
-const navigation =
-  user?.role === "admin" || user?.role === "super_admin"
-    ? adminNavigation
-    : userNavigation;
-
-
+  // Build navigation dynamically based on role
+  let navigation: NavItem[];
+  if (user?.role === "super_admin") {
+    navigation = [
+      baseAdminNavigation[0], // Dashboard
+      {
+        name: "User Management",
+        icon: User,
+        href: "/dashboard/usermanagement",
+        current: false,
+      },
+      ...baseAdminNavigation.slice(1), // rest of admin menu
+    ];
+  } else if (user?.role === "admin") {
+    navigation = baseAdminNavigation;
+  } else {
+    navigation = userNavigation;
+  }
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -151,6 +127,7 @@ const navigation =
     dispatch(logout());
     setIsOpen(false);
   };
+
   return (
     <div className="flex h-screen bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
       <aside
@@ -158,6 +135,7 @@ const navigation =
           ${isOpen ? "w-64" : "w-20"}
           dark:bg-gray-800 dark:text-gray-100 rounded-r-xl`}
       >
+        {/* Header */}
         <div
           className={`relative flex items-center p-4 border-b border-gray-100 dark:border-gray-700
             ${isOpen ? "justify-between" : "justify-center"}`}
@@ -180,6 +158,7 @@ const navigation =
           </button>
         </div>
 
+        {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {navigation.map((item) => (
             <div key={item.name}>
@@ -189,9 +168,7 @@ const navigation =
                   className={`group flex items-center w-full rounded-lg py-2.5 text-sm font-medium transition-all duration-200
                     ${
                       activeContent === item.href ||
-                      item.children.some(
-                        (child) => child.href === activeContent
-                      )
+                      item.children.some((child) => child.href === activeContent)
                         ? "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md border-l-4 border-indigo-700 dark:border-indigo-300"
                         : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 hover:scale-[1.02]"
                     }
@@ -201,9 +178,7 @@ const navigation =
                     <item.icon
                       className={`h-6 w-6 ${isOpen ? "mr-3" : ""} ${
                         activeContent === item.href ||
-                        item.children.some(
-                          (child) => child.href === activeContent
-                        )
+                        item.children.some((child) => child.href === activeContent)
                           ? "text-white"
                           : "text-gray-500 dark:text-gray-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400"
                       }`}
@@ -239,6 +214,7 @@ const navigation =
                 </a>
               )}
 
+              {/* Submenu */}
               {isOpen && item.children && openSubmenu === item.name && (
                 <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 dark:border-gray-600 pl-2">
                   {item.children.map((subItem) => (
@@ -270,13 +246,16 @@ const navigation =
           ))}
         </nav>
 
+        {/* User Info + Logout */}
         <div
           className={`p-4 border-t border-gray-100 dark:border-gray-700 ${
             isOpen ? "" : "flex justify-center flex-col items-center"
           }`}
         >
           <div className={`flex items-center ${isOpen ? "" : "flex-col"}`}>
-            <img
+            <Image
+              width={40}
+              height={40}
               className={`h-10 w-10 rounded-full object-cover border-2 border-indigo-400 dark:border-indigo-600 ${
                 isOpen ? "mr-3" : ""
               }`}
@@ -285,7 +264,9 @@ const navigation =
             />
             {isOpen && (
               <div>
-                <div className="text-base font-semibold">{user?.firstName} {user?.lastName}</div>
+                <div className="text-base font-semibold">
+                  {user?.firstName} {user?.lastName}
+                </div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {user?.email}
                 </div>
@@ -293,15 +274,13 @@ const navigation =
             )}
           </div>
           <button
-           onClick={handleLogout}
+            onClick={handleLogout}
             className={`mt-4 flex items-center w-full rounded-lg py-2.5 text-sm font-medium transition-colors duration-200
               ${isOpen ? "px-3 justify-start" : "justify-center"}
               text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 hover:scale-[1.02]'`}
           >
             <LogOut
-              className={`h-5 w-5 ${
-                isOpen ? "mr-3" : ""
-              } text-gray-500 dark:text-gray-400`}
+              className={`h-5 w-5 ${isOpen ? "mr-3" : ""} text-gray-500 dark:text-gray-400`}
             />
             {isOpen && <span>Sign Out</span>}
           </button>

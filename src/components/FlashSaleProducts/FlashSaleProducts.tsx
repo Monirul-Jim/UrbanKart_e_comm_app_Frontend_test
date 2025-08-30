@@ -3,7 +3,24 @@ import { useGetFlashSaleProductsQuery } from "@/redux/api/productApi";
 import { addToCart } from "@/redux/feature/auth/cartSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/feature/hook";
 import { RootState } from "@/redux/feature/store";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
+type ProductType = {
+  _id: string;
+  title: string;
+  price: number;
+  flashSalePrice: number;
+  flashSaleStart: string;
+  flashSaleEnd: string;
+  image: string;
+};
+type CartItem = {
+  _id: string;
+  title: string;
+  price: number;
+  image: string;
+  quantity: number;
+};
 
 // Countdown hook
 const useCountdown = (endDate: string) => {
@@ -36,13 +53,13 @@ const useCountdown = (endDate: string) => {
 };
 
 // ✅ Card component (still in same file)
-const FlashSaleCard = ({ product }: { product: any }) => {
+const FlashSaleCard = ({ product }: { product: ProductType }) => {
   const dispatch = useAppDispatch();
 
   // ✅ Get cart state
   const cartItems = useAppSelector((state: RootState) => state.cart.items);
   const countdown = useCountdown(product.flashSaleEnd);
-  const isInCart = cartItems.some((item: any) => item._id === product?._id);
+  const isInCart = cartItems.some((item: CartItem) => item._id === product?._id);
   const handleAddToCart = () => {
     if (!product || isInCart) return;
     dispatch(
@@ -57,7 +74,9 @@ const FlashSaleCard = ({ product }: { product: any }) => {
   };
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-all duration-300 w-full">
-      <img
+      <Image
+      width={100}
+      height={32}
         src={product.image}
         alt={product.title}
         className="w-full h-32 object-cover"
@@ -120,7 +139,7 @@ const FlashSaleProducts = () => {
       <h2 className="text-2xl font-bold mb-6">🔥 Flash Sale</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {data?.data?.map((product: any) => (
+        {data?.data?.map((product: ProductType) => (
           <FlashSaleCard key={product._id} product={product} />
         ))}
       </div>

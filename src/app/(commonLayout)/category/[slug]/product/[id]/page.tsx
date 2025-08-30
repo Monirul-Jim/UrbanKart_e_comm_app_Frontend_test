@@ -4,26 +4,34 @@ import { useGetSingleProductQuery } from "@/redux/api/productApi";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/feature/store";
 import { addToCart } from "@/redux/feature/auth/cartSlice";
+import Image from "next/image";
+
+type CartItem = {
+  _id: string;
+  title: string;
+  price: number;
+  image: string;
+  quantity: number;
+};
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const { data, isLoading, error } = useGetSingleProductQuery(id as string);
   const dispatch = useDispatch();
 
-  // ✅ Get cart state
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  
+
   if (isLoading) return <p className="text-center mt-10">Loading...</p>;
   if (error) return <p className="text-center mt-10">Error fetching product</p>;
 
   const product = data?.data;
 
-  // ✅ Check if product already exists in cart
-  const isInCart = cartItems.some((item: any) => item._id === product?._id);
+  const isInCart = cartItems.some(
+    (item: CartItem) => item._id === product?._id
+  );
 
-  // ✅ Handle add to cart
   const handleAddToCart = () => {
-    if (!product || isInCart) return;
+    if (!product || isInCart || product.stockOut) return;
     dispatch(
       addToCart({
         _id: product._id,
@@ -38,7 +46,9 @@ export default function ProductDetailPage() {
   return (
     <div className="container mx-auto px-6 py-10">
       <div className="grid md:grid-cols-2 gap-8">
-        <img
+        <Image
+          width={100}
+          height={80}
           src={product?.image}
           alt={product?.title}
           className="w-full h-80 object-cover rounded-lg shadow-lg"
@@ -51,7 +61,11 @@ export default function ProductDetailPage() {
             ${product?.price}
           </p>
 
-          {isInCart ? (
+          {product?.stockOut ? (
+            <span className="mt-6 inline-block bg-red-100 text-red-700 px-6 py-2 rounded-lg font-semibold">
+              Out of Stock
+            </span>
+          ) : isInCart ? (
             <button
               disabled
               className="mt-6 bg-gray-400 text-white px-6 py-2 rounded-lg shadow cursor-not-allowed"

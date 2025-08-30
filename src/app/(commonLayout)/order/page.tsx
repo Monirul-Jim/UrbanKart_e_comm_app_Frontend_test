@@ -11,6 +11,7 @@ import {
 import { AppDispatch, RootState } from "@/redux/feature/store";
 
 import { useAppSelector } from "@/redux/feature/hook";
+import Image from "next/image";
 export default function CartPage() {
   const [mounted, setMounted] = useState(false); // 👈 hydration guard
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -99,7 +100,9 @@ export default function CartPage() {
             className="flex items-center justify-between border-b pb-4"
           >
             <div className="flex items-center gap-4">
-              <img
+              <Image
+                width={20}
+                height={20}
                 src={item.image}
                 alt={item.title}
                 className="w-20 h-20 object-cover rounded-lg"

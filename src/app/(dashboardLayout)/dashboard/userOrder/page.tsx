@@ -2,7 +2,34 @@
 import React, { useEffect, useState } from "react";
 import { useAppSelector } from "@/redux/feature/hook";
 import { useGetUserOrdersQuery } from "@/redux/api/orderApi";
+import Image from "next/image";
+// src/types/order.ts
+export type OrderItem = {
+  _id: string;
+  title: string;
+  price: number;
+  image: string;
+  quantity: number;
+};
 
+export type Customer = {
+  name: string;
+  phone: string;
+  city: string;
+  address: string;
+};
+
+export type Order = {
+  _id: string;
+  tran_id: string;
+  customer?: Customer;
+  amount: number;
+  currency: string;
+  items: OrderItem[];
+  status: "SUCCESS" | "PENDING" | "FAILED";
+  orderStatus: "PENDING" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "RETURNED" | "ON_ARRIVAL_PENDING" | "ON_ARRIVAL_DELIVERED";
+  createdAt: string;
+};
 const UserOrdersTable = () => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -29,7 +56,7 @@ const UserOrdersTable = () => {
           </tr>
         </thead>
         <tbody>
-          {orders.data.map((order: any, idx: number) => (
+          {orders?.data?.map((order: Order, idx: number) => (
             <tr
               key={order._id}
               className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
@@ -40,7 +67,7 @@ const UserOrdersTable = () => {
                   className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     order.orderStatus === "PENDING"
                       ? "bg-yellow-100 text-yellow-700"
-                      : order.orderStatus === "COMPLETED"
+                      : order.orderStatus === "DELIVERED"
                       ? "bg-green-100 text-green-700"
                       : "bg-gray-200 text-gray-700"
                   }`}
@@ -53,14 +80,16 @@ const UserOrdersTable = () => {
               </td>
               <td className="p-3">
                 <div className="space-y-2">
-                  {order.items.map((item: any) => (
+                  {order?.items?.map((item: OrderItem) => (
                     <div
                       key={item._id}
                       className="flex items-center space-x-3 border rounded-lg p-2"
                     >
-                      <img
+                      <Image
                         src={item.image}
                         alt={item.title}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 object-cover rounded-md border"
                       />
                       <div>

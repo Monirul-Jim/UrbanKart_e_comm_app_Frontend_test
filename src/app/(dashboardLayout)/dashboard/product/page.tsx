@@ -1,4 +1,6 @@
+
 "use client";
+
 import { useForm } from "react-hook-form";
 import {
   useCreateProductMutation,
@@ -13,7 +15,31 @@ import { ProductForm } from "@/interface/productInterface";
 import { useState, useEffect } from "react";
 import { CheckCircle, Info, Pencil, Trash2, X, XCircle } from "lucide-react";
 import Pagination from "@/components/Pagination/Pagination";
-
+import Image from "next/image";
+// interface/productInterface.ts
+export interface Product {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  discountPrice?: number;
+  image: string;
+  subCategory: {
+    _id: string;
+    name: string;
+    category: {
+      name: string;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+  isFlashSale: boolean;
+  flashSalePrice?: number;
+  flashSaleStart?: string;
+  flashSaleEnd?: string;
+  stockOut: boolean;
+  isPopular: boolean;
+}
 export default function Product() {
   const { register, handleSubmit, reset, watch } = useForm<ProductForm>();
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,22 +49,26 @@ export default function Product() {
   const [updateStockOut] = useUpdateStockOutMutation();
   const [updatePopular] = useUpdatePopularStatusMutation();
 
-  const { data, isLoading } = useGetAllProductsQuery({
+  const { data } = useGetAllProductsQuery({
     page: currentPage,
     limit,
   });
   const { data: subCategories } = useGetAllSubCategoriesQuery(undefined);
   const [deleteProduct] = useDeleteProductMutation();
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [viewProduct, setViewProduct] = useState<any>(null); // for modal view
-  const { data: products, meta } = data || {};
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const { data: _products, meta } = data || {};
   const totalPages = meta?.totalPage || 1;
   const isFlashSale = watch("isFlashSale");
 
   // preload form values when editing
   useEffect(() => {
     if (editingProduct) {
-      reset(editingProduct);
+      const productFormData = {
+        ...editingProduct,
+        subCategory: editingProduct.subCategory._id,
+      };
+      reset(productFormData);
     } else {
       reset({
         title: "",
@@ -57,7 +87,7 @@ export default function Product() {
   const onSubmit = async (formData: ProductForm) => {
     try {
       if (editingProduct) {
-        let payload = { ...formData };
+        const payload = { ...formData };
 
         // Convert datetime-local to ISO (only if flash sale is enabled)
         if (payload.isFlashSale) {
@@ -100,7 +130,7 @@ export default function Product() {
     await deleteProduct(id);
   };
 
-  const handleEdit = (product: any) => {
+  const handleEdit = (product: Product) => {
     setEditingProduct(product);
   };
   const handleStockOutToggle = async (id: string, currentStatus: boolean) => {
@@ -116,7 +146,7 @@ export default function Product() {
   const handlePopularToggle = async (id: string, currentStatus: boolean) => {
     try {
       await updatePopular({
-         id,
+        id,
         isPopular: !currentStatus,
       }).unwrap();
     } catch (error) {
@@ -166,11 +196,17 @@ export default function Product() {
           className="w-full border rounded p-2"
         >
           <option value="">Select SubCategory</option>
-          {subCategories?.data?.map((sub: any) => (
-            <option key={sub._id} value={sub._id}>
-              {sub.name} ({sub.category?.name})
-            </option>
-          ))}
+          {subCategories?.data?.map(
+            (sub: {
+              _id: string;
+              name: string;
+              category?: { name: string };
+            }) => (
+              <option key={sub._id} value={sub._id}>
+                {sub.name} ({sub.category?.name})
+              </option>
+            )
+          )}
         </select>
 
         {/* Flash Sale only when updating */}
@@ -226,7 +262,7 @@ export default function Product() {
       {/* Product Table */}
       <div>
         {Object.entries(
-          data?.data?.reduce((groups: Record<string, any[]>, product: any) => {
+          data?.data?.reduce((groups: Record<string, Product[]>, product: Product) => {
             const categoryName =
               product?.subCategory?.category?.name || "Others";
             if (!groups[categoryName]) groups[categoryName] = [];
@@ -234,7 +270,7 @@ export default function Product() {
             return groups;
           }, {}) || {}
         ).map(([categoryName, products]) => {
-          const typedProducts = products as any[];
+          const typedProducts = products as Product[];
 
           return (
             <div key={categoryName} className="mb-10">
@@ -260,15 +296,18 @@ export default function Product() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {typedProducts.map((product: any, index: number) => (
+                    {typedProducts.map((product: Product, index: number) => (
                       <tr key={product._id}>
                         <td className="px-6 py-4">{index + 1}</td>
                         <td className="px-6 py-4">
-                          <img
+                          <Image
                             src={product?.image}
                             alt={product?.title}
-                            className="w-16 h-16 object-cover rounded"
+                            width={64}
+                            height={64}
+                            className="object-cover rounded"
                           />
+                          ;
                         </td>
                         <td className="px-6 py-4 font-semibold">
                           {product?.title}
@@ -413,7 +452,9 @@ export default function Product() {
             </button>
 
             <h2 className="text-xl font-semibold mb-3">{viewProduct.title}</h2>
-            <img
+            <Image
+              width={100}
+              height={60}
               src={viewProduct.image}
               alt={viewProduct.title}
               className="w-full h-60 object-cover rounded mb-4"
@@ -454,11 +495,15 @@ export default function Product() {
                 </p>
                 <p>
                   <strong>Start:</strong>{" "}
-                  {new Date(viewProduct.flashSaleStart).toLocaleString()}
+                  {viewProduct.flashSaleStart
+                    ? new Date(viewProduct.flashSaleStart).toLocaleString()
+                    : "-"}
                 </p>
                 <p>
                   <strong>End:</strong>{" "}
-                  {new Date(viewProduct.flashSaleEnd).toLocaleString()}
+                  {viewProduct.flashSaleEnd
+                    ? new Date(viewProduct.flashSaleEnd).toLocaleString()
+                    : "-"}
                 </p>
               </div>
             )}
