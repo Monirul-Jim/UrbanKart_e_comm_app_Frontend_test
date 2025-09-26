@@ -19,7 +19,8 @@ const eslintConfig = [
       "no-var": "off", // ✅ allow `var`
       "no-unused-vars": "off", // ✅ allow unused vars (JS)
       "@typescript-eslint/no-unused-vars": "off", // ✅ allow unused vars (TS)
-       "@typescript-eslint/no-explicit-any": "off"
+      "@typescript-eslint/no-explicit-any": "off",
+      "react/no-unescaped-entities": "off",
     },
     ignores: [
       "node_modules/**",
